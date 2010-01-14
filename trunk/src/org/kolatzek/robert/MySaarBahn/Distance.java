@@ -1,13 +1,14 @@
+/**
+ * Class to calculate the distance between two points
+ * in arbitrary units
+ * license: free to use ;-) thx!
+ * @author keylimepai (@anddev.org)
+ */
 package org.kolatzek.robert.MySaarBahn;
 
 import android.location.Address;
 import android.location.Location;;
 
-/**
- * Class to calculate the distance between two points
- * in arbitrary units
- *
- */
 public class Distance
 {
      /** Names for the units to use */

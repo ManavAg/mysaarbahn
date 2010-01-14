@@ -1,3 +1,8 @@
+/**
+ * Station and translation to Geopoint
+ * @author Umberto
+ * Under GPLv3 license
+ */
 package org.kolatzek.robert.MySaarBahn;
 
 import com.google.android.maps.GeoPoint;
