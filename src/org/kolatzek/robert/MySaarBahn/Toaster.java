@@ -1,15 +1,13 @@
 /**
- * 
+ * Toast as Runnable
+ * @author Umberto
+ * Under GPLv3 license
  */
 package org.kolatzek.robert.MySaarBahn;
 
 import android.content.Context;
 import android.widget.Toast;
 
-/**
- * @author neo
- *
- */
 public class Toaster implements Runnable 
 {
 	Context context;

@@ -1,13 +1,15 @@
+/**
+ * Main file/activity of mySaarBahn
+ * @author Umberto
+ * Under GPLv3 license
+ */
 package org.kolatzek.robert.MySaarBahn;
 
-
 import android.app.Dialog;
-import android.app.PendingIntent;
 import android.app.TabActivity;
 import android.os.Bundle;
 import android.os.Handler;
 
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -20,15 +22,12 @@ import android.content.SharedPreferences;
 import android.location.*;
 import android.util.Log;
 import android.view.Gravity;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.SpinnerAdapter;
@@ -37,10 +36,8 @@ import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.TabHost.OnTabChangeListener;
-import android.widget.TabHost.TabContentFactory;
 import android.widget.TabHost.TabSpec;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -51,7 +48,6 @@ import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.util.Date;
-import com.google.android.maps.*;
 
 import org.kolatzek.robert.MySaarBahn.*;
 

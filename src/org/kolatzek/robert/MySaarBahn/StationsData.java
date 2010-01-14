@@ -1,3 +1,8 @@
+/**
+ * Saarbahn stations data (missing any after Brebach)
+ * @author Umberto
+ * Under GPLv3 license
+ */
 package org.kolatzek.robert.MySaarBahn;
 
 import java.util.ArrayList;
@@ -9,7 +14,6 @@ import java.util.List;
 
 import org.kolatzek.robert.MySaarBahn.Station;
 
-import android.util.Log;
 
 public class StationsData {
 	HashMap<String, Station> gps;
