@@ -3,5 +3,6 @@
 	<classpathentry kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
 	<classpathentry kind="src" path="gen"/>
 	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="lib" path="/home/neo/Dokumente/emm-android-0.9.4/emm-android-0.9.4/emm-android.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
