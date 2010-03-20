@@ -8,7 +8,6 @@
 	<string name="Please_activate_PROVIDER">Please activate: %s</string>
 	<string name="I_will_use_last_known_position">Starting with last known position</string>
 	<string name="to_next_station">You are %s km from the next Saarbahn station (%s) away.</string>
-	
 	<string name="YourActualPosition">Youre actual positon</string>
 	<string name="Position">Position</string>
 	<string name="Roadmap">Roadmap</string>
@@ -34,8 +33,9 @@
 	<string name="installing">This take a while...</string>
 	<string name="updateText">This software needs actual data. It will try to download and update the internal database. To do this, you need an internet connection. Please click on &quot;Install&quot; to start update. This can make a very long time (up to 1 min.). Do not close this app untill all data was installed!</string>
 	<string name="next_conections_from">Your next connections from %s are:</string>
-<string name="destination_time">dir. %s: %s</string>
-<string name="selected_station_time">to %s: %s</string>
-<string name="from_selected_station_time">from %s: %s</string>
-<string name="calculating_roadmap">calculating roadmap...</string>
+	<string name="destination_time">dir. %s: %s</string>
+	<string name="selected_station_time">to %s: %s</string>
+	<string name="from_selected_station_time">from %s: %s</string>
+	<string name="calculating_roadmap">calculating roadmap...</string>
+	<string name="here_are_exact_times">Cklick here to see exact departure times on Saarbahn homepage.</string>
 </resources>
