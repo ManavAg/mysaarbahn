@@ -8,7 +8,6 @@
 	<string name="Please_activate_PROVIDER">Schalten Sie bitte %s ein.</string>
 	<string name="I_will_use_last_known_position">Ihr zuletzt ermittelter Standort wird verwendet.</string>
 	<string name="to_next_station">Sie sind %s km von der nächsten Saarbahn Haltestelle (%s) entfernt.</string>
-	
 	<string name="YourActualPosition">Ihr Standort</string>
 	<string name="Position">Standort</string>
 	<string name="Roadmap">Fahrplan</string>
@@ -34,8 +33,9 @@
 	<string name="installing">Dies kann ein Weilchen dauern...</string>
 	<string name="updateText">Das Programm muss die Fahrplandaten aktualiesieren. Es bezieht diese aus dem Internet und installiert auf diesem Gerät. Stellen Sie sicher, dass Sie mit dem Internet verbunden sind und klicken auf &quot;Installation&quot;, um mit dem Download und der Installation zu beginnen. Dies kann sehr lange (bis zu 1 Min.) dauern. Schließen Sie dieses App nicht bevor alled Daten installiert wurden!</string>
 	<string name="next_conections_from">Ihre nächste Verbindungen von %s aus sind:</string>
-<string name="destination_time">Richtung %s: %s</string>
-<string name="selected_station_time">Nach %s: %s</string>
-<string name="from_selected_station_time">Von %s: %s</string>
-<string name="calculating_roadmap">Berechne Fahrplan...</string>
+	<string name="destination_time">Richtung %s: %s</string>
+	<string name="selected_station_time">Nach %s: %s</string>
+	<string name="from_selected_station_time">Von %s: %s</string>
+	<string name="calculating_roadmap">Berechne Fahrplan...</string>
+	<string name="here_are_exact_times">Klicken Sie hier, um exakte Abfahrtzeiten von der Saarbahn-Homepage abzurufen.</string>
 </resources>
