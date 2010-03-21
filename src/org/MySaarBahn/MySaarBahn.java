@@ -51,9 +51,7 @@ import java.math.BigDecimal;
 import java.net.URL;
 import java.util.Date;
 
-import org.MySaarBahn.*;
-
-public class MySaarBahn extends TabActivity  implements LocationListener, Runnable, TabHost.OnTabChangeListener {
+public class MySaarBahn extends TabActivity  implements LocationListener, Runnable {
 	TextView tv = null;
 	LocationManager lm = null;
 	SQLiteDatabase db = null;
@@ -908,9 +906,4 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
 	public void run() {
 	}
 
-
-	public void onTabChanged(String tabId) {
-		// TODO Auto-generated method stub
-		
-	}
 }
