@@ -22,8 +22,6 @@ import com.ericsson.mmaps.MapStyle;
 import com.ericsson.mmaps.MapView;
 import com.ericsson.mmaps.tools.KeyNavigationTool;
 import com.ericsson.mmaps.tools.ScaleBarTool;
-
-import  org.MySaarBahn.*;
 /**
  * @author neo
  *

@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 
 import org.MySaarBahn.Station;
@@ -101,12 +100,12 @@ public class StationsData {
 			        return Double.compare(d1, d2);
 			    }
 			});
-		Iterator <Station>  it = stations.iterator( ) ;
+		/*Iterator <Station>  it = stations.iterator( ) ;
 		while(it.hasNext())
 		{
 			Station s = it.next();
 			//Log.i("nx station", s.name+" = "+s.distance);
-		}
+		}*/
 		
 		return stations;
 	}
@@ -128,11 +127,11 @@ public class StationsData {
 			        return Double.compare(d1, d2);
 			    }
 			});
-		Iterator <Station>  it = stations.iterator( ) ;
+		/*Iterator <Station>  it = stations.iterator( ) ;
 		while(it.hasNext())
 		{
 			Station s = it.next();
-		}
+		}*/
 		
 		return stations;
 	}
