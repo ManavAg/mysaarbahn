@@ -28,7 +28,7 @@ public class sbTouchNavigationTool extends TouchNavigationTool
 	public boolean onSingleTapUp(MotionEvent e)
 	{
 		super.onSingleTapUp(e);
-		osmv.zoomOut();
+		//osmv.zoomOut();
 		return true;
 	}
 	
@@ -39,7 +39,7 @@ public class sbTouchNavigationTool extends TouchNavigationTool
 	public void onLongPress(MotionEvent e)
 	{
 		super.onLongPress(e);
-		osmv.zoomIn();
+		//osmv.zoomIn();
 	}
 
 }

@@ -5,7 +5,6 @@
  */
 package org.MySaarBahn;
 
-import android.app.Activity;
 import android.app.Dialog;
 import android.app.TabActivity;
 import android.net.Uri;
@@ -51,39 +50,53 @@ import java.math.BigDecimal;
 import java.net.URL;
 import java.util.Date;
 
+import org.MySaarBahn.Listener.FitInOnClickListener;
+import org.MySaarBahn.Listener.OnDestinationChangeListener;
+import org.MySaarBahn.Listener.OnDoInstallClickListener;
+import org.MySaarBahn.Listener.OnSaarbahnStationsItemClick;
+import org.MySaarBahn.Listener.ZoomInOnClickListener;
+import org.MySaarBahn.Listener.ZoomOutOnClickListener;
+import org.MySaarBahn.Listener.exactTimesOnClickListener;
+
 public class MySaarBahn extends TabActivity  implements LocationListener, Runnable {
-	TextView tv = null;
-	LocationManager lm = null;
-	SQLiteDatabase db = null;
-	StationsData sd = null;
+	public TextView tv = null;
+	public LocationManager lm = null;
+	public SQLiteDatabase db = null;
+	public StationsData sd = null;
 	static int WEEKDAY = 0;
 	static int FRIDAY = 1;
 	static int SATURDAY = 2;
 	static int SUNDAY = 3;
-	TabHost mTabHost;
-	TableLayout roadmapWidget;
-	Spinner otherStation;
-	String selectedDestination = null;
-	Station selectedStation= null;
-	TabSpec positionTab;
-	TabSpec roadmapTab;
-	TabSpec mapTab;
-	Boolean dataInstalled = false;
-	String data_date = "";
-	String data_sheets_url = "";
-	String data_version = "";
-	int check_date = 0;
-	int mapFlag;
+	private TabHost mTabHost;
+	private TableLayout roadmapWidget;
+	public Spinner otherStation;
+	public String selectedDestination = null;
+	public Station selectedStation= null;
+	private TabSpec positionTab;
+	private TabSpec roadmapTab;
+	private TabSpec mapTab;
+	public Boolean dataInstalled = false;
+	 String data_date = "";
+	public String data_sheets_url = "";
+	public String data_version = "";
+	public int check_date = 0;
 	static int update_interval = 7*24*60*60;
-	Dialog installDialog;
-	String firstStation;
-	String lastStation;
-	boolean autoLocation = true;
+	public Dialog installDialog;
+	private String firstStation;
+	private String lastStation;
+	public boolean autoLocation = true;
 	private Thread myThread = null;
 	private Handler myHandler = null;
-	OSMView map;
-	String exactURL;
-	Location actualLocation = null;
+	protected OSMView map;
+	private String exactURL;
+	protected Location actualLocation = null;
+	private ZoomInOnClickListener zoomInListener = new ZoomInOnClickListener();
+	private ZoomOutOnClickListener zoomOutListener = new ZoomOutOnClickListener();
+	private FitInOnClickListener fitInListener = new FitInOnClickListener();
+	private exactTimesOnClickListener exactTimesInBrowser = new exactTimesOnClickListener();
+	private OnDestinationChangeListener destinationChangeListener = new OnDestinationChangeListener();
+	private OnSaarbahnStationsItemClick onSaarbahnStationsItemClick = new OnSaarbahnStationsItemClick();
+	private OnDoInstallClickListener doInstallListener = new OnDoInstallClickListener();
 
     public void onCreate(Bundle savedInstanceState) 
     {
@@ -100,23 +113,41 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
         }
         
         setContentView(R.layout.main);
+        exactTimesInBrowser.setParent(this);
+        destinationChangeListener.setParent(this);
+        onSaarbahnStationsItemClick.setParent(this);
+        doInstallListener.setParent(this);
         
         Log.d("tabhost", "get TabHost");
         mTabHost = getTabHost();
     	
         positionTab = mTabHost.newTabSpec("position").setIndicator(getString(R.string.Position)).setContent(R.id.position);
-        View v = (View) this.findViewById(R.id.position);
-        //v.setLayoutParams(
+
         mTabHost.addTab(positionTab);
         roadmapTab = mTabHost.newTabSpec("roadmapScrollView").setIndicator(getString(R.string.Roadmap)).setContent(R.id.roadmap);
         mTabHost.addTab(roadmapTab);
         Log.d("make mapTab", "start");
-        mapTab = mTabHost.newTabSpec("OSMview").setIndicator(getString(R.string.Map)).setContent(R.id.OSMview);
+        mapTab = mTabHost.newTabSpec("OSMview").setIndicator(getString(R.string.Map)).setContent(R.id.OSMviewParent);
         Log.d("make map", "start");
         mTabHost.addTab(mapTab);
         
         map = new OSMView(this.getBaseContext(), (LinearLayout) findViewById(R.id.OSMview));
         Log.d("map", "add map");
+        
+        Button zoomInButton = (Button) findViewById(R.id.zInButton);
+        zoomInButton.setOnClickListener(zoomInListener);
+        zoomInListener.setMap(map);
+
+        Button zoomOutButton = (Button) findViewById(R.id.zOutButton);
+        zoomOutButton.setOnClickListener(zoomOutListener);
+        zoomOutListener.setMap(map);
+
+        Button zoomCenterButton = (Button) findViewById(R.id.zCenterButton);
+        zoomCenterButton.setOnClickListener(fitInListener);
+        fitInListener.setMap(map);
+        fitInListener.setMyName(getString(R.string.me));
+        fitInListener.setActualLocation(actualLocation);
+        
         
         tv = (TextView) findViewById(R.id.actualPosTextView);
         sd = new StationsData();
@@ -215,7 +246,7 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
         }
         spinnerArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         otherStation.setAdapter((SpinnerAdapter)spinnerArrayAdapter);
-        otherStation.setOnItemSelectedListener(showSaarbahnStationsItemClick);
+        otherStation.setOnItemSelectedListener(onSaarbahnStationsItemClick);
         
         Criteria crit = new Criteria();
 		crit.setAccuracy(Criteria.ACCURACY_COARSE);
@@ -334,173 +365,6 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
 	public void onStatusChanged(String provider, int status, Bundle extras) {
 		// TODO Auto-generated method stub
 	}
-	
-    OnClickListener doInstallListener = new OnClickListener()
-    {
-    	public void onClick(View v)
-    	{
-    		installDialog.setTitle(getString(R.string.installing));
-    		TextView itv = (TextView) installDialog.findViewById(R.id.installTextView);
-			itv.setText(R.string.installHint);
-    		checkVersion(data_version);
-    		Button dataInstallButton = (Button) installDialog.findViewById(R.id.installButton);
-    		dataInstallButton.setVisibility(View.GONE);
-    		myHandler.post(new Toaster(installDialog.getContext(), installDialog.getContext().getString(R.string.installing_roadmap), Toast.LENGTH_SHORT));
-	    	Runnable inst = new Runnable()
-    		{
-    		    /**
-    		     * Install geopositions and data from StationData or online-csv
-    		     * @return boolean true 
-    		     */
-    			public void run()
-    			{
-    		        db.execSQL("DROP TABLE IF EXISTS geopositions");
-    		        db.execSQL("CREATE TABLE IF NOT EXISTS geopositions (name, latitude, longitude, shortname, position INTEGER, PRIMARY KEY(position DESC))");
-    		        sd = new StationsData();
-    		        List<Station> orte = sd.getBySort();
-    		        String StationsCols = "";
-    		        Iterator i = orte.iterator();
-    		        while(i.hasNext())
-    		        {
-    		        	Station actual = (Station) i.next();
-    		        	String[] o = {actual.name, actual.latitude+"", actual.logitude+"", actual.shortname, actual.position+""};
-    		        	StationsCols = StationsCols + ", " + actual.shortname+" INTEGER";
-    		        	db.execSQL("INSERT OR IGNORE INTO geopositions VALUES (?, ?, ?, ?, ?)", o);
-    		        }
-    		        
-    		        // Install data
-    		        db.execSQL("DROP TABLE IF EXISTS Roadmap");
-    		        db.execSQL("CREATE TABLE IF NOT EXISTS Roadmap (type"+StationsCols+")");
-    		        boolean installation = true;
-    		        try
-    		        {
-    			        URL file = new URL(data_sheets_url);
-    			    	BufferedReader in = new BufferedReader(new InputStreamReader(file.openStream()));
-    			    	String inputLine;
-    			    	while ((inputLine = in.readLine()) != null && installation != false)
-    			    	{
-    			    		String[] line = inputLine.split(",");
-    			    		if(installRoadmap(Integer.parseInt(line[0]), line[1]))
-    			    		{
-    			    			Log.i("install data", line[0]+": "+line[1]+" installed");
-    			    		}
-    			    		else
-    			    		{
-    			    			installation = false;
-    			    		}
-    			    	}
-    			        in.close();
-    		        }
-    		        catch (Exception ex) { Log.e("ErrorGettingDataFeed", installDialog.getContext().getString(R.string.can_not_open_data, data_sheets_url));}
-    		        
-    		        if(installation == true)
-    		        {
-    		        	dataInstalled = true;
-
-    		    		if(dataInstalled == true)
-    		    		{
-    		        		myHandler.post(new Toaster(installDialog.getContext(), installDialog.getContext().getString(R.string.all_roadmap_data_installed), Toast.LENGTH_LONG));
-    		            	if(installDialog != null && installDialog.isShowing())
-    		            	{
-    		            		installDialog.hide();
-    		            		myinit();
-    		            	}
-    		    		}
-    		        }
-    			}
-    			
-    			/**
-    			 * Get and install roadmap data per day/type 
-    			 * @param int type - type of day
-    			 * @param String url - url of csv with data
-    			 * @return boolean true if successfull
-    			 */
-    			public boolean installRoadmap(int type, String url)
-    			{
-    				//myHandler.post(new Toaster(d.getContext(), d.getContext().getString(R.string.downloading_data), Toast.LENGTH_SHORT));
-    				boolean installation = false;
-    		        try
-    		        {
-    			        URL file = new URL(url);
-    			    	BufferedReader in = new BufferedReader(new InputStreamReader(file.openStream()));
-    			    	String inputLine;
-    			    	while ((inputLine = in.readLine()) != null)
-    			    	{
-    			    		String[] line = inputLine.split(",");
-    			    		String stops = "";
-    			    		for(int i=0; i<line.length; i++)
-    			    		{
-    			    			stops = stops + ", " + line[i];
-    			    		}
-    			    		db.execSQL("INSERT OR IGNORE INTO Roadmap VALUES ("+type+stops+")");
-    			    	}
-    			        in.close();
-    			        installation = true;
-    			        return installation;
-    		        }
-    		        catch (Exception ex) 
-    		        { Log.e("installRoadmapError", installDialog.getContext().getString(R.string.can_not_open_data, url));}
-    		        return false;
-    			}
-    		};
-    		myHandler.post(inst);
-    	}
-    };
-    
-    OnClickListener destinationChangeListener = new OnClickListener()
-    {
-    	public void onClick(View v)
-    	{
-    		//Log.i("destinationChangeListener", "clicked: "+((TextView) v).getText().toString());
-    		Station s = sd.getStationByName(((TextView) v).getText().toString());
-    		selectedDestination = s.shortname;
-    		/*Log.w("dest", "Select shortname FROM geopositions WHERE name="+((TextView) v).getText().toString());
-    		Cursor sel = db.rawQuery("SELECT shortname FROM geopositions WHERE name = '"+((TextView) v).getText().toString()+"'", null);
-    		if(sel.getCount() > 0)
-    		{
-    			sel.moveToFirst();
-        		Log.w("selectedDestination", sel.getString(sel.getColumnIndex("shortname")));
-    			selectedDestination = sel.getString(sel.getColumnIndex("shortname"));
-    		}*/
-        	if(dataInstalled == false)
-        	{
-        		return; //Do nothing if data are not installed
-        	}
-    		calcRoadmap(selectedStation);
-    	}
-    };
-    
-    OnClickListener exactTimesInBrowser = new OnClickListener()
-    {
-    	public void onClick(View v)
-    	{
-    		Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(exactURL));
-    		startActivity(i);
-    	}
-    };
-    
-    OnItemSelectedListener showSaarbahnStationsItemClick = new OnItemSelectedListener()
-    {
-		public void onItemSelected(AdapterView<?> arg0, View arg1, int arg2,long arg3) {
-    		//Log.i("showDestinationStations", "clicked");
-			if(autoLocation == false)
-			{
-	    		otherStation = (Spinner) findViewById(R.id.otherStation);
-	    		String s = otherStation.getSelectedItem().toString();
-	    		HashMap<String, Station> orte = sd.getStations();
-	    		Station station = orte.get(s);
-	    		tv.setText(getString(R.string.to_selected_station, station.name, (new BigDecimal(station.distance)).setScale( 2, BigDecimal.ROUND_HALF_UP )));
-	    		calcRoadmap(station);
-	    		//Log.d("s", station.name);
-	    		calcRoadmap(station);
-			}
-			autoLocation = false;
-		}
-
-		public void onNothingSelected(AdapterView<?> arg0) {
-			// TODO Auto-generated method stub
-		}
-    };
 
     /**
      * Calculate data for new location
@@ -509,6 +373,7 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
 	public void calcNewLocation(Location location)
 	{
 		actualLocation = location;
+        fitInListener.setActualLocation(actualLocation);
         HashMap<String, Station> orte = sd.getStations();
         Date d = new Date();
         for(Iterator<String> iterator = orte.keySet().iterator(); iterator.hasNext();)
@@ -525,7 +390,7 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
         calcRoadmap(next);
 	}
     
-    private void calcRoadmap(Station station)
+    public void calcRoadmap(Station station)
     {
     	Toast.makeText(this, getString(R.string.calculating_roadmap), Toast.LENGTH_SHORT);
     	if(selectedStation != station)
@@ -654,19 +519,7 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
 							" AND ("+gt_lt+") AND type "+WeekdayCondition+ destination+" ORDER BY "+station.shortname+" ASC";
     	Cursor roadmapBack = db.rawQuery(backSQL, null);
 		
-    	//Log.i("fw sql", fwSQL);
-    	//Log.i("back sql", backSQL);
 		stations.moveToFirst();
-		
-		/*while(roadmapForw.moveToNext())
-		{
-			String Plan = ""; 
-			for( int i = 0; i<roadmapForw.getColumnCount(); i++)
-			{
-				Plan = Plan+" "+roadmapForw.getColumnName(i)+"="+roadmapForw.getString(i);
-			}
-			Log.e("Plan", Plan);
-		} */
 		
 		int startTimeFw = -1;
 		int startTimeBck = -1;
@@ -740,19 +593,17 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
     				));
     	}
     	/*http://lupe.tec-saar.de/smartinfo/service/jsp/?olifServerId=68&autorefresh=0&default_autorefresh=60&routeId=68%2F1&stopId=Hellwigstra%C3%9Fe&optDir=-1&optTime=now&time=&nRows=8*/
-    	
-    	
-		// %2F = /
-		exactURL = "http://lupe.tec-saar.de/smartinfo/service/jsp/?olifServerId=68&autorefresh=0&default_autorefresh=60&routeId=68%2F1&stopId="+
+    	// %2F = /
+		exactURL = "http://lupe.tec-saar.de/smartinfo/service/jsp/mobile.jsp?olifServerId=68&autorefresh=0&default_autorefresh=60&routeId=68%2F1&stopId="+
 		sd.getSaarbahnLatin1(selectedStation.name)+"&optDir=-1&optTime=now&time=&nRows=8";
-    	if(exactURL != null)
+		if(exactURL != null)
     	{
     		((TextView) findViewById(R.id.exactTimes)).setVisibility(View.VISIBLE);
     		((TextView) findViewById(R.id.exactTimes)).setTextColor(Color.rgb(0, 140, 37));
     		((TextView) findViewById(R.id.exactTimes)).setTypeface(Typeface.defaultFromStyle(Typeface.BOLD_ITALIC));
     		((TextView) findViewById(R.id.exactTimes)).setText(R.string.here_are_exact_times);
     		((TextView) findViewById(R.id.exactTimes)).setOnClickListener(exactTimesInBrowser);
-    		Log.d("exactURL", exactURL);
+    		exactTimesInBrowser.setURL(exactURL);
     	}
     	else
     	{
