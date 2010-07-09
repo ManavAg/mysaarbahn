@@ -38,4 +38,7 @@
 	<string name="from_selected_station_time">from %s: %s</string>
 	<string name="calculating_roadmap">calculating roadmap...</string>
 	<string name="here_are_exact_times">Cklick here to see exact departure times on Saarbahn homepage.</string>
+<string name="ZoomIn">zoom in</string>
+<string name="ZoomOut">zoom out</string>
+<string name="centerZoom">center</string>
 </resources>
