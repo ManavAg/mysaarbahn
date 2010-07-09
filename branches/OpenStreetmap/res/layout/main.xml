@@ -1,30 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TabHost android:layout_width="fill_parent"
-	android:layout_height="fill_parent" xmlns:android="http://schemas.android.com/apk/res/android"
+<TabHost
+	xmlns:android="http://schemas.android.com/apk/res/android" 
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent"
 	android:id="@android:id/tabhost">
 		<TabWidget android:id="@android:id/tabs"
-			android:layout_width="fill_parent" android:layout_height="wrap_content"></TabWidget>
+		android:layout_width="fill_parent" 
+		android:layout_height="wrap_content"/>
 
-		<FrameLayout android:layout_height="fill_parent" android:paddingTop="65px"
-			android:id="@android:id/tabcontent" android:layout_width="fill_parent">
-			<ScrollView android:layout_height="fill_parent" android:padding="10px" android:layout_width="wrap_content">
-				<TableLayout android:id="@+id/position" android:layout_width="fill_parent"  android:layout_height="wrap_content">
+		<FrameLayout 
+		android:layout_height="fill_parent" 
+		android:paddingTop="65px"
+		android:id="@android:id/tabcontent" 
+		android:layout_width="fill_parent">
+			<ScrollView 
+			android:layout_height="fill_parent" 
+			android:padding="10px" 
+			android:layout_width="wrap_content">
+				<TableLayout android:id="@+id/position" 
+				android:layout_width="fill_parent"  
+				android:layout_height="wrap_content">
 					<TextView 
-						android:textSize="15sp" android:layout_width="wrap_content"
-						android:layout_height="wrap_content" android:id="@+id/actualPosTextView"
+						android:textSize="15sp" 
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content" 
+						android:id="@+id/actualPosTextView"
 						android:text="@string/YourActualPosition"/>
 					<TextView android:text="@string/select_other_station"
 						android:id="@+id/TextView_Text_select_other_station"
-						android:paddingTop="10px" android:layout_height="fill_parent"
-						android:layout_width="fill_parent" android:layout_gravity="center_horizontal"/>
+						android:paddingTop="10px" 
+						android:layout_height="fill_parent"
+						android:layout_width="fill_parent" 
+						android:layout_gravity="center_horizontal"/>
 					<Spinner android:layout_width="wrap_content"
-						android:layout_height="wrap_content" android:id="@+id/otherStation"
-						android:layout_margin="10px" android:drawSelectorOnTop="true"/>
+						android:layout_height="wrap_content" 
+						android:id="@+id/otherStation"
+						android:layout_margin="10px" 
+						android:drawSelectorOnTop="true"/>
 					<TextView
 						android:textSize="15sp"
 						android:id="@+id/nextConnections"
-						android:paddingTop="10sp" android:layout_height="fill_parent"
-						android:layout_width="fill_parent" android:layout_gravity="center_horizontal"/>
+						android:paddingTop="10sp" 
+						android:layout_height="fill_parent"
+						android:layout_width="fill_parent" 
+						android:layout_gravity="center_horizontal"/>
 					<TextView
 						android:textSize="15sp" android:textStyle="bold"
 						android:id="@+id/conn_forward" android:layout_height="fill_parent"
@@ -47,9 +66,49 @@
 				<TableLayout android:layout_width="wrap_content"
 					android:layout_height="fill_parent" android:id="@+id/roadmap"></TableLayout>
 			</ScrollView>
-			<LinearLayout
-				xmlns:android="http://schemas.android.com/apk/res/android"
+			
+			<TableLayout
 				android:layout_width="wrap_content"
-				android:layout_height="wrap_content" android:id="@+id/OSMview"/>
+				android:layout_height="wrap_content" android:id="@+id/OSMviewParent">
+				<TableRow>
+					<LinearLayout
+						android:layout_width="wrap_content"
+						android:layout_height="310dip" 
+						android:id="@+id/OSMview"/>
+				</TableRow>
+				<TableRow>
+					<TableLayout
+					android:stretchColumns="*"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content">
+					<TableRow>
+							<Button 
+							android:id="@+id/zInButton"
+							android:layout_width="wrap_content"
+							android:layout_height="fill_parent"
+							android:gravity="center" android:textColor="#000000" android:background="#EEEEEE" android:textSize="20dip" android:textStyle="bold"
+							android:layout_span="1"
+							android:layout_margin="5dip"
+							android:text="@string/ZoomIn"/>
+							<Button 
+							android:id="@+id/zCenterButton"
+							android:layout_width="wrap_content"
+							android:layout_height="fill_parent"
+							android:gravity="center" android:textColor="#000000" android:background="#EEEEEE" android:textSize="20dip" android:textStyle="bold"
+							android:layout_span="1"
+							android:layout_margin="5dip"
+							android:text="@string/centerZoom"/>
+							<Button 
+							android:id="@+id/zOutButton"
+							android:layout_width="wrap_content"
+							android:layout_height="fill_parent"
+							android:gravity="center" android:textColor="#000000" android:background="#EEEEEE" android:textSize="20dip" android:textStyle="bold"
+							android:layout_span="1"
+							android:layout_margin="5dip"
+							android:text="@string/ZoomOut"/>
+						</TableRow>
+					</TableLayout>
+				</TableRow>
+			</TableLayout>
 		</FrameLayout>
 </TabHost>

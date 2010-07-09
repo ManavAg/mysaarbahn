@@ -14,5 +14,12 @@
 				android:layout_height="wrap_content" android:id="@+id/installButton"
 				android:text="@string/install" android:padding="10sp"></Button>
 		</TableRow>
+		<TableRow android:layout_height="wrap_content" android:gravity="center_horizontal">
+			<ProgressBar android:id="@+id/installProgress"
+				android:visibility="gone" android:layout_width="fill_parent" android:layout_height="35dip"
+				style="?android:attr/progressBarStyleHorizontal"
+				android:max="5"
+				 android:padding="5dip"></ProgressBar>
+		</TableRow>
 	</TableLayout>
 </ScrollView>
