@@ -59,37 +59,45 @@ import org.MySaarBahn.Listener.ZoomOutOnClickListener;
 import org.MySaarBahn.Listener.exactTimesOnClickListener;
 
 public class MySaarBahn extends TabActivity  implements LocationListener, Runnable {
-	public TextView tv = null;
 	public LocationManager lm = null;
 	public SQLiteDatabase db = null;
 	public StationsData sd = null;
+	/** Date-time constants **/
 	static int WEEKDAY = 0;
 	static int FRIDAY = 1;
 	static int SATURDAY = 2;
 	static int SUNDAY = 3;
-	private TabHost mTabHost;
-	private TableLayout roadmapWidget;
-	public Spinner otherStation;
+	/** layout **/
+	public TextView tv = null;
+	private TabHost mTabHost = null;
+	private TableLayout roadmapWidget = null;
+	public Spinner otherStation = null;
 	public String selectedDestination = null;
 	public Station selectedStation= null;
-	private TabSpec positionTab;
-	private TabSpec roadmapTab;
-	private TabSpec mapTab;
+	private TabSpec positionTab = null;
+	private TabSpec roadmapTab = null;
+	private TabSpec mapTab = null;
+	/** data versions **/
 	public Boolean dataInstalled = false;
-	 String data_date = "";
+	public String data_date = "";
 	public String data_sheets_url = "";
 	public String data_version = "";
 	public int check_date = 0;
 	static int update_interval = 7*24*60*60;
 	public Dialog installDialog;
+	/** calculating position **/
 	private String firstStation;
 	private String lastStation;
 	public boolean autoLocation = true;
+	/** Threads **/
 	private Thread myThread = null;
 	private Handler myHandler = null;
-	protected OSMView map;
+	/** OpenStreetMap object **/
+	protected OSMView map = null;
+	/** URL to roadmap on Saarbahn server **/
 	private String exactURL;
 	protected Location actualLocation = null;
+	/** Listener **/
 	private ZoomInOnClickListener zoomInListener = new ZoomInOnClickListener();
 	private ZoomOutOnClickListener zoomOutListener = new ZoomOutOnClickListener();
 	private FitInOnClickListener fitInListener = new FitInOnClickListener();
@@ -148,11 +156,9 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
         fitInListener.setMyName(getString(R.string.me));
         fitInListener.setActualLocation(actualLocation);
         
-        
         tv = (TextView) findViewById(R.id.actualPosTextView);
         sd = new StationsData();
-		roadmapWidget = (TableLayout) findViewById(R.id.roadmap);
-        
+		roadmapWidget = (TableLayout) findViewById(R.id.roadmap);     
 
         db = openOrCreateDatabase("mysaarbahnDB", MODE_PRIVATE, null);
         
@@ -214,7 +220,9 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
     	}
     }
     
-	
+	/**
+	 * On stop store all data about update / actuality
+	 */
 	public void onStop()
 	{
 		super.onStop();
@@ -233,6 +241,9 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
 		}
 	}
     
+	/** 
+	 * Initialize Layout, set data, calculate - only if data installed 
+	 */
     public void myinit()
     {
 		
@@ -263,7 +274,6 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
 			bestLM = bestLM  + " " + (String)LBS_list.get(i);
 		}
 		bestLM = getString(R.string.Best_location_services, bestLM);
-		//Toast t = Toast.makeText(this, "", 0);
 		String provider = "";
 		if(LBS_list.size() == 0)
 		{
@@ -276,36 +286,25 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
 			if( lm.isProviderEnabled(bestProvider) ) //When best provider active
 			{
 				provider = bestProvider;
-				lm.requestLocationUpdates(provider, 10000, 25, this);
-				//t = Toast.makeText(this, bestLM +" "+ getString(R.string.I_will_use_PROVIDER, provider), Toast.LENGTH_LONG);
-				//Log.i("prov", provider);
-				//myHandler.post(new Toaster(this, bestLM +" "+ getString(R.string.I_will_use_PROVIDER, provider), Toast.LENGTH_LONG));
+				lm.requestLocationUpdates(provider, 5000, 15, this);
 			}
 			else if( lm.isProviderEnabled((String)LBS_list.get(0)) && bestProvider !=  (String)LBS_list.get(0)) //When bestprovider != the first, but first is enabled
 			{
 				provider = (String) LBS_list.get(0);
-				lm.requestLocationUpdates(provider, 10000, 25, this);
-				//t = Toast.makeText(this, bestLM +" "+ getString(R.string.I_will_use_PROVIDER, provider), Toast.LENGTH_LONG);
-				//Log.i("prov", provider);
-				//myHandler.post(new Toaster(this, bestLM +" "+ getString(R.string.I_will_use_PROVIDER, provider), Toast.LENGTH_LONG));
+				lm.requestLocationUpdates(provider, 5000, 15, this);
 			}
 
 			else if( LBS_list.size() > 1 && lm.isProviderEnabled((String)LBS_list.get(1)) && bestProvider !=  (String)LBS_list.get(1))//When bestprovider != the second, but second is enabled
 			{
 				provider = (String) LBS_list.get(1);
-				lm.requestLocationUpdates(provider, 10000, 25, this);
-				//t = Toast.makeText(this, bestLM +" "+ getString(R.string.I_will_use_PROVIDER, provider), Toast.LENGTH_LONG);
-				//Log.i("prov", provider);
-				//myHandler.post(new Toaster(this, bestLM +" "+ getString(R.string.I_will_use_PROVIDER, provider), Toast.LENGTH_LONG));
+				lm.requestLocationUpdates(provider, 5000, 15, this);
 			}
 			else
 			{
-				//t = Toast.makeText(this, bestLM +" "+ getString(R.string.Please_activate_PROVIDER, bestProvider), 3000);
 				myHandler.post(new Toaster(this, bestLM +" "+ getString(R.string.Please_activate_PROVIDER, bestProvider), 3000));
 			}
 		}
 		
-		//t.show();
 		try
 		{
 			Location last = lm.getLastKnownLocation(provider);
@@ -315,7 +314,6 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
 			}
 			else
 			{
-				//Toast.makeText(this, R.string.I_will_use_last_known_position, Toast.LENGTH_SHORT).show();
 				myHandler.post(new Toaster(this, R.string.I_will_use_last_known_position, Toast.LENGTH_LONG));
 				if(dataInstalled)
 				{
@@ -331,13 +329,11 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
 		}
 		catch (SecurityException e)
 		{
-			Toast t2 = Toast.makeText(this, e.toString() + provider, 2000);
-			t2.show();
+			myHandler.post(new Toaster(this, e.toString() + provider, Toast.LENGTH_LONG));
 		}
 		catch (IllegalArgumentException e)
 		{
-			Toast t2 = Toast.makeText(this, e.toString() + provider, 2000);
-			t2.show();
+			myHandler.post(new Toaster(this, e.toString() + provider, Toast.LENGTH_LONG));
 		}
     }
     
@@ -352,18 +348,15 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
 	}
 
 	public void onProviderDisabled(String provider) {
-		// TODO Auto-generated method stub
 		lm.removeUpdates(this);
 		Toast.makeText(this, R.string.No_location_service_active_no_help, 5000).show();
 	}
 
 	public void onProviderEnabled(String provider) {
-		// TODO Auto-generated method stub
 		lm.requestLocationUpdates(provider, 10000, 25, this);
 	}
 
 	public void onStatusChanged(String provider, int status, Bundle extras) {
-		// TODO Auto-generated method stub
 	}
 
     /**
@@ -390,6 +383,10 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
         calcRoadmap(next);
 	}
     
+	/**
+	 * calculate roadmap
+	 * @param station seleted station
+	 */
     public void calcRoadmap(Station station)
     {
     	Toast.makeText(this, getString(R.string.calculating_roadmap), Toast.LENGTH_SHORT);
@@ -474,8 +471,6 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
     	{
     		WeekdayCondition = "="+Weekday;
     	}
-    	
-    	//Log.i("date" , (d.getHours()*100)+d.getMinutes()+"");
     	
     	String destination = "";
     	if(selectedDestination != null)
@@ -616,6 +611,11 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
 		autoLocation = false;
     }
     
+    /**
+     * Create table header
+     * @param start - starting station
+     * @param stop - ending station
+     */
     private void tableHeader(String start, String stop)
     {
 		TableRow tr = new TableRow(this);
@@ -623,7 +623,10 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
     	LinearLayout ll = new LinearLayout(this);
     	{
 	    	TextView n = new TextView(this); 
-	    	n.setText(R.string.direction); n.setGravity(Gravity.LEFT); n.setPadding(5, 5, 15, 5); n.setTextColor(Color.GREEN);
+	    	n.setText(R.string.direction); 
+	    	n.setGravity(Gravity.LEFT); 
+	    	n.setPadding(5, 5, 15, 5); 
+	    	n.setTextColor(Color.GREEN);
 	    	ll.addView(n);
     	}
 	    tr.addView(ll, 0);
@@ -643,15 +646,21 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
     	roadmapWidget.addView(tr);  
     }
     
-    private TableRow newStation(String n, int forward, int backward)
+    /**
+     * create a table row for a roadmap
+     * @param name station name
+     * @param forward arriving time: start to stop (from Riegelsberg)
+     * @param backward arriving time: stop to start (the other way - to Riegelsberg)
+     * @return
+     */
+    private TableRow newStation(String name, int forward, int backward)
     {
-    	//Log.i("Station", n+", "+forward+", "+backward);
     	TextView ch = new TextView(this);
-    	ch.setText(n);
+    	ch.setText(name);
 		ch.setOnClickListener(destinationChangeListener);
     	ch.setGravity(Gravity.LEFT);
     	ch.setPadding(5, 5, 15, 5);
-    	if(n.equalsIgnoreCase(selectedStation.name))
+    	if(name.equalsIgnoreCase(selectedStation.name))
     	{
     		ch.setHint(R.string.start_station);
     		ch.setTextColor(Color.YELLOW);
@@ -667,7 +676,7 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
     	}
     	ch2.setGravity(Gravity.RIGHT);
     	ch2.setPadding(0, 5, 10, 5);
-    	if(n.equalsIgnoreCase(selectedStation.name))
+    	if(name.equalsIgnoreCase(selectedStation.name))
     	{
     		ch2.setTextColor(Color.YELLOW);
     	}
@@ -682,7 +691,7 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
     	}
     	ch3.setGravity(Gravity.RIGHT);
     	ch3.setPadding(0, 5, 5, 5);
-    	if(n.equalsIgnoreCase(selectedStation.name))
+    	if(name.equalsIgnoreCase(selectedStation.name))
     	{
     		ch3.setTextColor(Color.YELLOW);
     	}
@@ -695,6 +704,11 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
     	return tr;
     }
 	
+    /**
+     * get day of week - importand for roadmap: weekday, friday, saturday or sunday?
+     * @param calendar (today)
+     * @return
+     */
 	public int getWeekday(Calendar calendar)
 	{
     	int Weekday = -1;
@@ -721,6 +735,11 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
     	return Weekday;
 	}
 	
+	/**
+	 * check version of data (an update needed?)
+	 * @param myversion string with actual version
+	 * @return
+	 */
 	public boolean checkVersion( String myversion )
 	{
     	try
