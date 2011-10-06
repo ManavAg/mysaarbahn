@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+	android:theme="@style/sbstyle"
+	android:layout_width="fill_parent"
+	android:layout_height="wrap_content" android:id="@+id/installScrollView">
+	<TableLayout android:layout_width="fill_parent" android:layout_height="wrap_content">
+		<TableRow  android:layout_width="fill_parent" android:gravity="center_horizontal">
+			<TextView android:padding="10px" android:gravity="fill"
+				android:width="250sp" android:textSize="15sp"  android:layout_width="fill_parent"
+				android:text="@string/installText" android:id="@+id/installTextView"></TextView>
+		</TableRow>
+		<TableRow android:layout_height="wrap_content" android:gravity="center_horizontal">
+			<Button android:layout_width="wrap_content"
+				android:layout_height="wrap_content" android:id="@+id/installButton"
+				android:text="@string/install" android:padding="10sp"></Button>
+		</TableRow>
+		<TableRow android:layout_height="wrap_content" android:gravity="center_horizontal">
+			<ProgressBar android:id="@+id/installProgress"
+				android:visibility="gone" android:layout_width="fill_parent" android:layout_height="35dip"
+				style="?android:attr/progressBarStyleHorizontal"
+				android:max="5"
+				 android:padding="5dip"></ProgressBar>
+		</TableRow>
+	</TableLayout>
+</ScrollView>
