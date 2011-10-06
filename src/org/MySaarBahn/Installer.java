@@ -108,7 +108,7 @@ public class Installer implements Runnable {
 		    		String[] line = inputLine.split(",");
 		    		if(installRoadmap(Integer.parseInt(line[0]), line[1]))
 		    		{
-		    			Log.i("install data", line[0]+": "+line[1]+" installed");
+		    			//Log.i("install data", line[0]+": "+line[1]+" installed");
 		    			mHandler.post(new Runnable() {
 		                    public void run() {
 		                    	progressBar.setProgress(progressBar.getProgress()+1);

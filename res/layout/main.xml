@@ -6,11 +6,11 @@
 	android:id="@android:id/tabhost">
 		<TabWidget android:id="@android:id/tabs"
 		android:layout_width="fill_parent" 
-		android:layout_height="wrap_content"/>
+		android:layout_height="100px"/>
 
 		<FrameLayout 
 		android:layout_height="fill_parent" 
-		android:paddingTop="65px"
+		android:paddingTop="100px"
 		android:id="@android:id/tabcontent" 
 		android:layout_width="fill_parent">
 			<ScrollView 
@@ -67,48 +67,13 @@
 					android:layout_height="fill_parent" android:id="@+id/roadmap"></TableLayout>
 			</ScrollView>
 			
-			<TableLayout
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content" android:id="@+id/OSMviewParent">
-				<TableRow>
-					<LinearLayout
-						android:layout_width="wrap_content"
-						android:layout_height="310dip" 
+			<FrameLayout android:layout_width="fill_parent"
+				android:layout_height="fill_parent" android:id="@+id/mapScrollView"
+				android:layout_weight="1">
+					<org.osmdroid.views.MapView
+						android:layout_width="fill_parent"
+						android:layout_height="fill_parent"
 						android:id="@+id/OSMview"/>
-				</TableRow>
-				<TableRow>
-					<TableLayout
-					android:stretchColumns="*"
-					android:layout_width="wrap_content"
-					android:layout_height="wrap_content">
-					<TableRow>
-							<Button 
-							android:id="@+id/zInButton"
-							android:layout_width="wrap_content"
-							android:layout_height="fill_parent"
-							android:gravity="center" android:textColor="#000000" android:background="#EEEEEE" android:textSize="20dip" android:textStyle="bold"
-							android:layout_span="1"
-							android:layout_margin="5dip"
-							android:text="@string/ZoomIn"/>
-							<Button 
-							android:id="@+id/zCenterButton"
-							android:layout_width="wrap_content"
-							android:layout_height="fill_parent"
-							android:gravity="center" android:textColor="#000000" android:background="#EEEEEE" android:textSize="20dip" android:textStyle="bold"
-							android:layout_span="1"
-							android:layout_margin="5dip"
-							android:text="@string/centerZoom"/>
-							<Button 
-							android:id="@+id/zOutButton"
-							android:layout_width="wrap_content"
-							android:layout_height="fill_parent"
-							android:gravity="center" android:textColor="#000000" android:background="#EEEEEE" android:textSize="20dip" android:textStyle="bold"
-							android:layout_span="1"
-							android:layout_margin="5dip"
-							android:text="@string/ZoomOut"/>
-						</TableRow>
-					</TableLayout>
-				</TableRow>
-			</TableLayout>
+			</FrameLayout>
 		</FrameLayout>
 </TabHost>
