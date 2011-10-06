@@ -11,6 +11,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -20,13 +21,12 @@ import java.util.List;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.location.*;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup.LayoutParams;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -37,7 +37,6 @@ import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.TabHost.TabSpec;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -50,13 +49,24 @@ import java.math.BigDecimal;
 import java.net.URL;
 import java.util.Date;
 
-import org.MySaarBahn.Listener.FitInOnClickListener;
 import org.MySaarBahn.Listener.OnDestinationChangeListener;
 import org.MySaarBahn.Listener.OnDoInstallClickListener;
 import org.MySaarBahn.Listener.OnSaarbahnStationsItemClick;
-import org.MySaarBahn.Listener.ZoomInOnClickListener;
-import org.MySaarBahn.Listener.ZoomOutOnClickListener;
 import org.MySaarBahn.Listener.exactTimesOnClickListener;
+import org.MySaarBahn.R;
+import org.osmdroid.ResourceProxy;
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
+import org.osmdroid.util.GeoPoint;
+import org.osmdroid.views.MapController;
+import org.osmdroid.views.MapView;
+import org.osmdroid.views.overlay.MyLocationOverlay;
+import org.osmdroid.views.overlay.OverlayItem;
+import org.osmdroid.DefaultResourceProxyImpl;
+import org.osmdroid.ResourceProxy;
+import org.osmdroid.views.overlay.ItemizedIconOverlay;
+import org.osmdroid.views.overlay.ItemizedOverlay;
+import org.osmdroid.views.overlay.OverlayItem;
+import org.osmdroid.views.util.constants.MapViewConstants;
 
 public class MySaarBahn extends TabActivity  implements LocationListener, Runnable {
 	public LocationManager lm = null;
@@ -85,6 +95,7 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
 	public int check_date = 0;
 	static int update_interval = 7*24*60*60;
 	public Dialog installDialog;
+	private int now = 0;
 	/** calculating position **/
 	private String firstStation;
 	private String lastStation;
@@ -93,14 +104,14 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
 	private Thread myThread = null;
 	private Handler myHandler = null;
 	/** OpenStreetMap object **/
-	protected OSMView map = null;
+	protected MapView map = null;
+    protected MapController mapController;
+    protected MyLocationOverlay myLocationOverlay;
+    protected ItemizedOverlay<OverlayItem> trainLocationOverlay;
 	/** URL to roadmap on Saarbahn server **/
 	private String exactURL;
 	protected Location actualLocation = null;
 	/** Listener **/
-	private ZoomInOnClickListener zoomInListener = new ZoomInOnClickListener();
-	private ZoomOutOnClickListener zoomOutListener = new ZoomOutOnClickListener();
-	private FitInOnClickListener fitInListener = new FitInOnClickListener();
 	private exactTimesOnClickListener exactTimesInBrowser = new exactTimesOnClickListener();
 	private OnDestinationChangeListener destinationChangeListener = new OnDestinationChangeListener();
 	private OnSaarbahnStationsItemClick onSaarbahnStationsItemClick = new OnSaarbahnStationsItemClick();
@@ -121,12 +132,12 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
         }
         
         setContentView(R.layout.main);
+        now = (int) ((new Date()).getTime() * 0.001);
         exactTimesInBrowser.setParent(this);
         destinationChangeListener.setParent(this);
         onSaarbahnStationsItemClick.setParent(this);
         doInstallListener.setParent(this);
         
-        Log.d("tabhost", "get TabHost");
         mTabHost = getTabHost();
     	
         positionTab = mTabHost.newTabSpec("position").setIndicator(getString(R.string.Position)).setContent(R.id.position);
@@ -134,27 +145,18 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
         mTabHost.addTab(positionTab);
         roadmapTab = mTabHost.newTabSpec("roadmapScrollView").setIndicator(getString(R.string.Roadmap)).setContent(R.id.roadmap);
         mTabHost.addTab(roadmapTab);
-        Log.d("make mapTab", "start");
-        mapTab = mTabHost.newTabSpec("OSMview").setIndicator(getString(R.string.Map)).setContent(R.id.OSMviewParent);
-        Log.d("make map", "start");
+        mapTab = mTabHost.newTabSpec("OSMview").setIndicator(getString(R.string.Map)).setContent(R.id.mapScrollView);
         mTabHost.addTab(mapTab);
         
-        map = new OSMView(this.getBaseContext(), (LinearLayout) findViewById(R.id.OSMview));
-        Log.d("map", "add map");
-        
-        Button zoomInButton = (Button) findViewById(R.id.zInButton);
-        zoomInButton.setOnClickListener(zoomInListener);
-        zoomInListener.setMap(map);
+        map = (MapView) this.findViewById(R.id.OSMview);
+        map.setTileSource(TileSourceFactory.MAPNIK);
+        map.setBuiltInZoomControls(true);
+        map.setMultiTouchControls(true);
+        mapController = map.getController();
+        mapController.setZoom(15);
 
-        Button zoomOutButton = (Button) findViewById(R.id.zOutButton);
-        zoomOutButton.setOnClickListener(zoomOutListener);
-        zoomOutListener.setMap(map);
+		myLocationOverlay = new  MyLocationOverlay(this, map);
 
-        Button zoomCenterButton = (Button) findViewById(R.id.zCenterButton);
-        zoomCenterButton.setOnClickListener(fitInListener);
-        fitInListener.setMap(map);
-        fitInListener.setMyName(getString(R.string.me));
-        fitInListener.setActualLocation(actualLocation);
         
         tv = (TextView) findViewById(R.id.actualPosTextView);
         sd = new StationsData();
@@ -176,17 +178,15 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
         	{
         		check_date = now;
         		dataInstalled = true;
-        		Log.i("actual", "true");
         	}
         	else
         	{
         		dataInstalled = false;
-        		Log.i("actual", "false");
         	}
         }
         catch (Exception e)
         {
-        	Log.i("get preferences", "first start, no prefs");
+        	//Log.i("get preferences", "first start, no prefs");
         }
         
         if(!(db.rawQuery("SELECT name FROM sqlite_master WHERE name='geopositions'", null).getCount() > 0 
@@ -199,20 +199,7 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
         
     	if(dataInstalled == false)
     	{
-    		data_date = "";
-			data_sheets_url = "";
-			data_version = "";
-    		Toast.makeText(this, getString(R.string.No_data_found_Insteallation), Toast.LENGTH_SHORT);
-    		installDialog = new Dialog(this);
-    		installDialog.setContentView(R.layout.install_dialog);
-    		installDialog.getWindow().setTitle(getString(R.string.installTitle));
-    		if(check_date != 0 && now > check_date+update_interval)
-    		{
-    			((TextView) installDialog.findViewById(R.id.installTextView)).setText(R.string.updateText);
-    		}
-    		installDialog.show();
-    		Button dataInstallButton = (Button) installDialog.findViewById(R.id.installButton);
-            dataInstallButton.setOnClickListener(doInstallListener);
+    		startImport();
     	}
     	else
     	{
@@ -237,7 +224,7 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
 		}
 		catch (Exception e)
 		{
-			Log.e("mySaarBahnSettings", "not saved");
+			//Log.e("mySaarBahnSettings", "not saved");
 		}
 	}
     
@@ -323,7 +310,7 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
 				}
 				else
 				{
-					//warn -> no data
+					startImport();
 				}
 			}
 		}
@@ -358,6 +345,27 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
 
 	public void onStatusChanged(String provider, int status, Bundle extras) {
 	}
+    
+	/**
+	 * Import roadmap data from GDocs
+	 */
+	private void startImport() 
+	{
+		data_date = "";
+		data_sheets_url = "";
+		data_version = "";
+		Toast.makeText(this, getString(R.string.No_data_found_Installation), Toast.LENGTH_SHORT);
+		installDialog = new Dialog(this);
+		installDialog.setContentView(R.layout.install_dialog);
+		installDialog.getWindow().setTitle(getString(R.string.installTitle));
+		if(check_date != 0 && now > check_date+update_interval)
+		{
+			((TextView) installDialog.findViewById(R.id.installTextView)).setText(R.string.updateText);
+		}
+		installDialog.show();
+		Button dataInstallButton = (Button) installDialog.findViewById(R.id.installButton);
+        dataInstallButton.setOnClickListener(doInstallListener);
+	}
 
     /**
      * Calculate data for new location
@@ -366,7 +374,6 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
 	public void calcNewLocation(Location location)
 	{
 		actualLocation = location;
-        fitInListener.setActualLocation(actualLocation);
         HashMap<String, Station> orte = sd.getStations();
         Date d = new Date();
         for(Iterator<String> iterator = orte.keySet().iterator(); iterator.hasNext();)
@@ -384,30 +391,60 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
 	}
     
 	/**
+	 * Draw a train icon on next train stop position and center on the icon 
+	 * @param next Station object to use
+	 */
+	public void setTrainIcon(Station next)
+	{
+        ArrayList<OverlayItem> items = new ArrayList<OverlayItem>();
+        GeoPoint trainPoint = new GeoPoint(next.latitude, next.logitude);
+        items.add(new OverlayItem(next.shortname, next.name, trainPoint));
+        ResourceProxy mResourceProxy = new DefaultResourceProxyImpl(getApplicationContext());
+        Resources r = getResources();
+        trainLocationOverlay = null;
+        map.getOverlays().clear();
+        map.invalidate();
+        trainLocationOverlay = new ItemizedIconOverlay<OverlayItem>(items, r.getDrawable(R.drawable.tramway),
+                new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
+                    @Override
+                    public boolean onItemSingleTapUp(final int index,
+                            final OverlayItem item) {return false;}
+                    @Override
+                    public boolean onItemLongPress(final int index,
+                            final OverlayItem item) {return false;}
+                }, mResourceProxy); 
+        map.getOverlays().add(trainLocationOverlay);
+        map.invalidate();
+        if( !this.autoLocation )
+        {
+        	mapController.setCenter(trainPoint);
+        }
+	}
+	
+	/**
 	 * calculate roadmap
 	 * @param station seleted station
 	 */
     public void calcRoadmap(Station station)
     {
-    	Toast.makeText(this, getString(R.string.calculating_roadmap), Toast.LENGTH_SHORT);
-    	if(selectedStation != station)
-    	{
-    		map.removeStation();
-        	map.setStation(station);
-    	}
-    	if(actualLocation != null)
-    	{
-	        map.removeMe();
-	        map.setMe(actualLocation.getLatitude(), actualLocation.getLongitude(), getString(R.string.me));
-	        map.fitOn(actualLocation.getLatitude(), actualLocation.getLongitude());
-	        map.refresh();
-    	}
-    	else
-    	{
-        	map.fitOn(station.latitude, station.logitude);
-    	}
-    	selectedStation = station;
     	//Log.d("station", station.name);
+    	Toast.makeText(this, getString(R.string.calculating_roadmap), Toast.LENGTH_SHORT);
+		
+        map.getOverlays().clear();
+        map.invalidate();
+    	if( station instanceof Station )
+    	{
+            setTrainIcon(station);
+    	}
+		map.getOverlays().add(myLocationOverlay);
+		myLocationOverlay.runOnFirstFix(new Runnable() {
+			public void run() {
+			    /* Animate to the current location on first GPS fix */
+				//mapController.animateTo(mMyLocationOverlay.getMyLocation());
+			}
+		});
+		myLocationOverlay.onLocationChanged(actualLocation);
+    	selectedStation = station;
     	
     	Date d = new Date();
     	Calendar calendar = new GregorianCalendar();
@@ -587,9 +624,9 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
     				getString(R.string.destination_time, lastStation, fwtime
     				));
     	}
-    	/*http://lupe.tec-saar.de/smartinfo/service/jsp/?olifServerId=68&autorefresh=0&default_autorefresh=60&routeId=68%2F1&stopId=Hellwigstra%C3%9Fe&optDir=-1&optTime=now&time=&nRows=8*/
+    	/*http://lupe.tec-saar.de/smartinfo/service/jsp/mobile.jsp?olifServerId=68&&autorefresh=0&default_autorefresh=60&routeId=68%2F1&stopId=Hellwigstra%C3%9Fe&optDir=-1&optTime=now&time=&nRows=8*/
     	// %2F = /
-		exactURL = "http://lupe.tec-saar.de/smartinfo/service/jsp/mobile.jsp?olifServerId=68&autorefresh=0&default_autorefresh=60&routeId=68%2F1&stopId="+
+		exactURL = "http://lupe.tec-saar.de/smartinfo/service/jsp/mobile.jsp?olifServerId=68&&autorefresh=0&default_autorefresh=60&routeId=68%2F1&stopId="+
 		sd.getSaarbahnLatin1(selectedStation.name)+"&optDir=-1&optTime=now&time=&nRows=8";
 		if(exactURL != null)
     	{
@@ -714,23 +751,23 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
     	int Weekday = -1;
     	if(calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY)
     	{
-    		Log.e("day", "Sonntag");
+    		//Log.e("day", "Sonntag");
     		Weekday = SUNDAY;
     	}
     	else if(calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY)
     	{
-    		Log.e("day", "Samstag");
+    		//Log.e("day", "Samstag");
     		Weekday = SATURDAY;
     	}
     	else if(calendar.get(Calendar.DAY_OF_WEEK) == Calendar.FRIDAY)
     	{
     		Weekday = FRIDAY;
-    		Log.e("day", "Freitag");
+    		//Log.e("day", "Freitag");
     	}
     	else
     	{
     		Weekday = WEEKDAY;
-    		Log.e("day", "Wochentag");
+    		//Log.e("day", "Wochentag");
     	}
     	return Weekday;
 	}
@@ -744,7 +781,7 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
 	{
     	try
         {
-	        URL file = new URL("http://spreadsheets.google.com/pub?key=tP4mNamPMLcs8K9PH5dJGWw&single=true&gid=0&output=csv");
+	        URL file = new URL("https://spreadsheets.google.com/pub?key=tP4mNamPMLcs8K9PH5dJGWw&single=true&gid=0&output=csv");
 	    	BufferedReader in = new BufferedReader(new InputStreamReader(file.openStream()));
 	    	String inputLine;
             check_date = (int) ((new Date()).getTime() * 0.001);
@@ -763,15 +800,33 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
 	    		{
 	    			data_sheets_url = line[1];
 	    		}
-	    		Log.i("line", line[0]+"-"+line[1]);
 	    	}
 	        in.close();
 	        return false;
         }
         catch (Exception ex) 
-        { Log.e("installRoadmapError", this.getString(R.string.can_not_open_data, "http://spreadsheets.google.com/pub?key=tP4mNamPMLcs8K9PH5dJGWw&single=true&gid=0&output=csv"));}
+        { Log.e("installRoadmapError", this.getString(R.string.can_not_open_data, "https://spreadsheets.google.com/pub?key=tP4mNamPMLcs8K9PH5dJGWw&single=true&gid=0&output=csv"));}
         return false;
 	}
+	
+	/** (re-)enable location and compass updates */
+    @Override
+    public void onResume() {
+        super.onResume();
+        
+                myLocationOverlay.enableCompass();
+                myLocationOverlay.enableMyLocation();          
+                myLocationOverlay.followLocation(true);
+    }
+    
+    /** disable compass and location updates */
+    @Override
+    public void onPause() {
+        super.onPause();
+        
+                this.myLocationOverlay.disableMyLocation();
+                this.myLocationOverlay.disableCompass();
+    }
 
 	public void run() {
 	}
