@@ -38,7 +38,5 @@
 	<string name="from_selected_station_time">Von %1$s: %2$s</string>
 	<string name="calculating_roadmap">Berechne Fahrplan...</string>
 	<string name="here_are_exact_times">Klicken Sie hier, um exakte Abfahrtzeiten von der Saarbahn-Homepage abzurufen.</string>
-<string name="ZoomIn">gößer</string>
-<string name="ZoomOut">kleiner</string>
-<string name="centerZoom">zurück</string>
+	<string name="automatic">automatisch</string>
 </resources>

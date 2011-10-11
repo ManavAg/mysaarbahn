@@ -38,7 +38,5 @@
 	<string name="from_selected_station_time">Z %1$s: %2$s</string>
 	<string name="calculating_roadmap">Obliczam połączenie...</string>
 	<string name="here_are_exact_times">Kliknij tutaj, aby sprawdzić dokładne czasy odjazdów na strone Saarbahn.</string>
-<string name="ZoomIn">powiększ</string>
-<string name="ZoomOut">pomniejsz</string>
-<string name="centerZoom">wycentruj</string>
+	<string name="automatic">automatycznie</string>
 </resources>

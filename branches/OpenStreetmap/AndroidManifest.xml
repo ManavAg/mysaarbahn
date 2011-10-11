@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="org.MySaarBahn"
-      android:versionCode="300" 
-      android:versionName="osmdroid"
+      android:versionCode="302" 
+      android:versionName="osmdroid+autostation"
       >
 	<uses-sdk android:minSdkVersion="4"/>
 	

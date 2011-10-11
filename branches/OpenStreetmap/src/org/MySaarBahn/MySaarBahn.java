@@ -99,7 +99,6 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
 	/** calculating position **/
 	private String firstStation;
 	private String lastStation;
-	public boolean autoLocation = true;
 	/** Threads **/
 	private Thread myThread = null;
 	private Handler myHandler = null;
@@ -108,9 +107,10 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
     protected MapController mapController;
     protected MyLocationOverlay myLocationOverlay;
     protected ItemizedOverlay<OverlayItem> trainLocationOverlay;
+    protected GeoPoint trainPoint;
 	/** URL to roadmap on Saarbahn server **/
 	private String exactURL;
-	protected Location actualLocation = null;
+	public Location actualLocation = null;
 	/** Listener **/
 	private exactTimesOnClickListener exactTimesInBrowser = new exactTimesOnClickListener();
 	private OnDestinationChangeListener destinationChangeListener = new OnDestinationChangeListener();
@@ -238,6 +238,7 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
         Cursor stations = db.query(true, "geopositions", new String[]{"name"}, null, null, null, null, "name ASC", null);
         ArrayAdapter<String> spinnerArrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item);
         spinnerArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerArrayAdapter.add(getString(R.string.automatic));
         while(stations.moveToNext())
         {
         	spinnerArrayAdapter.add(stations.getString(stations.getColumnIndex("name")));
@@ -304,9 +305,7 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
 				myHandler.post(new Toaster(this, R.string.I_will_use_last_known_position, Toast.LENGTH_LONG));
 				if(dataInstalled)
 				{
-					autoLocation = true;
 					calcNewLocation(last);
-					autoLocation = true;
 				}
 				else
 				{
@@ -326,7 +325,6 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
     
 	public void onLocationChanged(Location location) 
 	{
-		autoLocation = true;
     	if(dataInstalled == false)
     	{
     		return; //Do nothing if data are not installed
@@ -373,7 +371,11 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
      */
 	public void calcNewLocation(Location location)
 	{
-		actualLocation = location;
+		String old_station = "";
+		if(selectedStation != null)
+		{
+			old_station = selectedStation.shortname;
+		}
         HashMap<String, Station> orte = sd.getStations();
         Date d = new Date();
         for(Iterator<String> iterator = orte.keySet().iterator(); iterator.hasNext();)
@@ -382,12 +384,31 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
         	orte.get(key).distance = Distance.calculateDistance(location, orte.get(key).getLocation(), Distance.KILOMETERS);
         	orte.get(key).time = d.getTime();
         }
-        List<Station> ls = sd.getByDistances();
-        Station next = ls.get(0);
         
-        tv.setText(getString(R.string.to_next_station, (new BigDecimal(next.distance)).setScale( 2, BigDecimal.ROUND_HALF_UP ), next.name));
-        
-        calcRoadmap(next);
+        Object spinnerSelectedItem = otherStation.getSelectedItem();
+        if(spinnerSelectedItem == null || spinnerSelectedItem.toString() == getString(R.string.automatic))
+        {
+            List<Station> ls = sd.getByDistances();
+            Station next = ls.get(0);
+            //Log.i("next station", next.name);
+        	tv.setText(getString(R.string.to_next_station, (new BigDecimal(next.distance)).setScale( 2, BigDecimal.ROUND_HALF_UP ), next.name));
+        	calcRoadmap(next);
+        }
+        else
+        {
+    		Station station = orte.get(spinnerSelectedItem);
+    		tv.setText(getString(R.string.to_selected_station, station.name, (new BigDecimal(station.distance)).setScale( 2, BigDecimal.ROUND_HALF_UP )));
+    		calcRoadmap(station);
+        }
+        if(actualLocation instanceof Location && Distance.calculateDistance(actualLocation, location, Distance.KILOMETERS) >= 0.5)
+        {
+        	mapController.setCenter(new GeoPoint(location.getLatitude(), location.getLongitude()));
+        }
+        else if(!old_station.equalsIgnoreCase(selectedStation.shortname))
+        {
+        	mapController.setCenter(trainPoint);
+        }
+		actualLocation = location;
 	}
     
 	/**
@@ -397,7 +418,7 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
 	public void setTrainIcon(Station next)
 	{
         ArrayList<OverlayItem> items = new ArrayList<OverlayItem>();
-        GeoPoint trainPoint = new GeoPoint(next.latitude, next.logitude);
+        trainPoint = new GeoPoint(next.latitude, next.logitude);
         items.add(new OverlayItem(next.shortname, next.name, trainPoint));
         ResourceProxy mResourceProxy = new DefaultResourceProxyImpl(getApplicationContext());
         Resources r = getResources();
@@ -415,10 +436,6 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
                 }, mResourceProxy); 
         map.getOverlays().add(trainLocationOverlay);
         map.invalidate();
-        if( !this.autoLocation )
-        {
-        	mapController.setCenter(trainPoint);
-        }
 	}
 	
 	/**
@@ -427,7 +444,7 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
 	 */
     public void calcRoadmap(Station station)
     {
-    	//Log.d("station", station.name);
+    	selectedStation = station;
     	Toast.makeText(this, getString(R.string.calculating_roadmap), Toast.LENGTH_SHORT);
 		
         map.getOverlays().clear();
@@ -443,8 +460,10 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
 				//mapController.animateTo(mMyLocationOverlay.getMyLocation());
 			}
 		});
-		myLocationOverlay.onLocationChanged(actualLocation);
-    	selectedStation = station;
+		if(actualLocation instanceof Location)
+		{
+			myLocationOverlay.onLocationChanged(actualLocation);
+		}
     	
     	Date d = new Date();
     	Calendar calendar = new GregorianCalendar();
@@ -466,6 +485,14 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
     		{
     			prevStation = stations.getString(stations.getColumnIndex("shortname"));
     		}
+    	}
+    	if(prevStation == "")
+    	{
+    		prevStation = station.shortname;
+    	}
+    	if(nextStation == "")
+    	{
+    		nextStation = station.shortname;
     	}
     	stations.moveToFirst();
     	firstStation = stations.getString(stations.getColumnIndex("name"));
@@ -581,7 +608,7 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
 				bckTime = -1;
 			}
 			roadmapWidget.addView(newStation(stations.getString(stations.getColumnIndex("name")), fwTime , bckTime));
-			if(selectedStation.shortname.equalsIgnoreCase(stations.getString(stations.getColumnIndex("shortname"))))
+			if(station.shortname.equalsIgnoreCase(stations.getString(stations.getColumnIndex("shortname"))))
 			{
 				startTimeFw = fwTime;
 				startTimeBck = bckTime;
@@ -593,7 +620,7 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
     	String bktime = (startTimeBck-(startTimeBck%100))/100+":"+String.format("%02d", (startTimeBck%100));
     	if(startTimeBck < 0) {bktime = getString(R.string.no_connection);}
     	((TextView) findViewById(R.id.nextConnections)).setText(
-				getString(R.string.next_conections_from, selectedStation.name
+				getString(R.string.next_conections_from, station.name
 				));
     	if(selectedDestination != null)
     	{
@@ -627,7 +654,7 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
     	/*http://lupe.tec-saar.de/smartinfo/service/jsp/mobile.jsp?olifServerId=68&&autorefresh=0&default_autorefresh=60&routeId=68%2F1&stopId=Hellwigstra%C3%9Fe&optDir=-1&optTime=now&time=&nRows=8*/
     	// %2F = /
 		exactURL = "http://lupe.tec-saar.de/smartinfo/service/jsp/mobile.jsp?olifServerId=68&&autorefresh=0&default_autorefresh=60&routeId=68%2F1&stopId="+
-		sd.getSaarbahnLatin1(selectedStation.name)+"&optDir=-1&optTime=now&time=&nRows=8";
+		sd.getSaarbahnLatin1(station.name)+"&optDir=-1&optTime=now&time=&nRows=8";
 		if(exactURL != null)
     	{
     		((TextView) findViewById(R.id.exactTimes)).setVisibility(View.VISIBLE);
@@ -645,7 +672,6 @@ public class MySaarBahn extends TabActivity  implements LocationListener, Runnab
 		stations.close(); roadmapBack.close(); roadmapForw.close();
 		tableHeader(lastStation, firstStation);
 		selectedDestination = null;
-		autoLocation = false;
     }
     
     /**
